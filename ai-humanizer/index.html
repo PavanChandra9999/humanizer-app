@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Humanizer Pro</title>
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #ffffff; --card-bg: #ffffff; --text: #334155; }
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Needed for sticky footer */
+            color: var(--text);
+        }
+        
+        /* Main Layout */
+        .container { 
+            max-width: 1000px; 
+            margin: 40px auto; 
+            background: var(--card-bg); 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px -1px rgba(0, 255, 0, 0.693); 
+            flex: 1; /* Pushes footer down */
+            width: 90%;
+        }
+        
+        h1 { text-align: center; color: #0f172a; margin: 0 0 10px 0; font-size: 2.2rem; }
+        p.subtitle { text-align: center; color: #64748b; margin-top: 0; margin-bottom: 30px; }
+
+        /* Controls Section */
+        .controls { display: flex; gap: 20px; background: #f1f5f9; padding: 20px; border-radius: 16px; margin-bottom: 30px; flex-wrap: wrap; border: 1px solid #e2e8f0; }
+        .control-group { flex: 1; min-width: 250px; }
+        label { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px; color: #475569; }
+        
+        /* Slider */
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--primary); }
+        .slider-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #64748b; margin-top: 5px; font-weight: 500; }
+        
+        /* Inputs */
+        input[type="text"], textarea { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
+        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        textarea { resize: vertical; line-height: 1.5; }
+
+        /* The "Magic" Button */
+        button { cursor: pointer; padding: 16px; border: none; border-radius: 10px; font-weight: 700; font-size: 1.1rem; transition: all 0.2s; width: 100%; letter-spacing: 0.5px; }
+        .btn-magic { 
+            background: linear-gradient(135deg, #2563eb, #4f46e5); 
+            color: white; 
+            margin-top: 15px; 
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); 
+        }
+        .btn-magic:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4); }
+        .btn-magic:active { transform: translateY(0); }
+        .btn-magic:disabled { background: #cbd5e1; cursor: wait; transform: none; }
+
+        /* Grid */
+        .grid { display: flex; gap: 30px; margin-top: 30px; }
+        .col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+        /* Output Textareas */
+        .output-box { background: #f8fafc; color: #64748b; border: 2px dashed #cbd5e1; }
+        .output-box.final { background: #f0fdf4; border: 2px solid #10b981; color: #0f172a; }
+
+        /* Loading Animation */
+        .status-msg { text-align: center; margin-top: 20px; font-weight: 600; color: var(--primary); height: 20px; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            margin-top: auto; /* Pushes to bottom */
+        }
+        
+        @media (max-width: 768px) {
+            .grid { flex-direction: column; }
+            .container { padding: 20px; width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>✨ AI Content to Humanizer</h1>
+    <p class="subtitle">Write, Rewrite, and Humanize in one click.</p>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Humanization Level: <span id="intensityVal" style="color:var(--primary)">100% (Ghost Mode)</span></label>
+            <input type="range" id="intensity" min="1" max="100" value="100" oninput="updateLabel(this.value)">
+            <div class="slider-labels">
+                <span>Safe</span>
+                <span>Balanced</span>
+                <span>Ghost Mode</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>🛡️ Frozen Keywords (for SEO):</label>
+            <input type="text" id="keywords" placeholder="e.g. React, Q3 Report, BrandName...">
+        </div>
+    </div>
+
+    <label>What should the AI write?</label>
+    <textarea id="userPrompt" rows="3" placeholder="Enter a topic (e.g. 'Write an email calling in sick')..."></textarea>
+    
+    <button id="magicBtn" class="btn-magic" onclick="runFullProcess()">Generate & Humanize 🚀</button>
+
+    <div id="status" class="status-msg"></div>
+
+    <div class="grid">
+        <div class="col">
+            <label>Phase 1: AI Draft</label>
+            <textarea id="aiOutput" class="output-box" rows="12" readonly placeholder="Waiting for input..."></textarea>
+        </div>
+        <div class="col">
+            <label>Phase 2: Humanized Result</label>
+            <textarea id="humanOutput" class="output-box final" rows="12" readonly placeholder="Final result will appear here..."></textarea>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 AI Humanizer Pro. Built with Flask & Gemini.</p>
+</footer>
+
+<script>
+    function updateLabel(val) {
+        let label = "";
+        if(val < 35) label = " (Professional)";
+        else if(val < 75) label = " (Casual)";
+        else label = " (Ghost Mode)";
+        document.getElementById('intensityVal').innerText = val + "%" + label;
+    }
+
+    async function runFullProcess() {
+        const prompt = document.getElementById('userPrompt').value;
+        const btn = document.getElementById('magicBtn');
+        const status = document.getElementById('status');
+        
+        // 1. Validation
+        if (!prompt) return alert("Please enter a topic first!");
+
+        // 2. Clear Previous State (AS REQUESTED)
+        document.getElementById('aiOutput').value = "";
+        document.getElementById('humanOutput').value = "";
+        
+        // 3. Set Loading State
+        btn.disabled = true;
+        status.innerText = "Step 1/2: Generating AI Content...";
+        
+        try {
+            // --- STEP 1: GENERATE ---
+            const genRes = await fetch('/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt })
+            });
+            const genData = await genRes.json();
+            
+            if (genData.error) throw new Error(genData.error);
+            
+            const aiText = genData.result;
+            document.getElementById('aiOutput').value = aiText;
+
+            // --- STEP 2: HUMANIZE (Auto-Triggered) ---
+            status.innerText = "Step 2/2: Humanizing & Removing Patterns...";
+            
+            const intensity = document.getElementById('intensity').value;
+            const keywords = document.getElementById('keywords').value;
+
+            const humRes = await fetch('/humanize', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    text: aiText, 
+                    intensity: parseInt(intensity), 
+                    keywords: keywords 
+                })
+            });
+            const humData = await humRes.json();
+
+            if (humData.error) throw new Error(humData.error);
+
+            document.getElementById('humanOutput').value = humData.result;
+            status.innerText = "✨ Process Complete!";
+
+        } catch (error) {
+            alert("Error: " + error.message);
+            status.innerText = "❌ Error Occurred";
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
