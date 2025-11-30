@@ -9,6 +9,7 @@ app = Flask(__name__, template_folder='../templates')
 # We use os.environ to get the key securely from Vercel settings
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 model = genai.GenerativeModel('gemini-2.5-pro')
+# test
 
 # --- THE 50-POINT PROMPT ---
 HUMANIZE_PROMPT = """
