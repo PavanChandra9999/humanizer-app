@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI to Human Converter</title>
+    <style>
+        /* CSS STYLES */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { text-align: center; color: #333; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+        
+        .input-section { margin-bottom: 25px; }
+        
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #444; }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box; /* Fixes padding issues */
+        }
+        
+        button {
+            cursor: pointer;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .btn-gen { background-color: #0070f3; color: white; }
+        .btn-gen:hover { background-color: #005bb5; }
+        
+        .btn-hum { background-color: #10b981; color: white; }
+        .btn-hum:hover { background-color: #059669; }
+        .btn-hum:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .grid-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .col { flex: 1; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .grid-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🤖 AI to Humanizer</h1>
+    <p class="subtitle">Generate content and rewrite it to bypass AI detection.</p>
+
+    <!-- Input Section -->
+    <div class="input-section">
+        <label>Enter Topic / Prompt:</label>
+        <textarea id="userPrompt" rows="3" placeholder="E.g. Write an email about missing a deadline..."></textarea>
+        <button class="btn-gen" onclick="generateAI()">Generate Content</button>
+    </div>
+
+    <div id="loading" class="loading">Working on it...</div>
+
+    <!-- Output Section -->
+    <div class="grid-row">
+        <div class="col">
+            <label>AI Generated Version:</label>
+            <textarea id="aiOutput" rows="12" readonly placeholder="AI output will appear here..."></textarea>
+        </div>
+        <button id="humanBtn" class="btn-hum" onclick="humanizeText()" disabled>Humanize This Content ✨</button>
+        <div class="col">
+            <label>Humanized Version (80%+):</label>
+            <textarea id="humanOutput" rows="12" readonly placeholder="Humanized result will appear here..."></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function generateAI() {
+        const prompt = document.getElementById('userPrompt').value;
+        const aiBox = document.getElementById('aiOutput');
+        const loader = document.getElementById('loading');
+        const humanBtn = document.getElementById('humanBtn');
+
+        if (!prompt) return alert("Please enter a topic.");
+
+        loader.style.display = 'block';
+        aiBox.value = ""; 
+        
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+            const data = await response.json();
+            
+            if(data.error) {
+                alert("Error: " + data.error);
+            } else {
+                aiBox.value = data.result;
+                humanBtn.disabled = false; // Enable step 2
+            }
+        } catch (err) {
+            alert("Failed to connect to server.");
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    async function humanizeText() {
+        const aiText = document.getElementById('aiOutput').value;
+        const humanBox = document.getElementById('humanOutput');
+        const loader = document.getElementById('loading');
+
+        loader.style.display = 'block';
+        humanBox.value = "";
+
+        try {
+            const response = await fetch('/humanize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: aiText })
+            });
+            const data = await response.json();
+
+            if(data.error) {
+                alert("Error: " + data.error);
+            } else {
+                humanBox.value = data.result;
+            }
+        } catch (err) {
+            alert("Failed to connect to server.");
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
