@@ -9,7 +9,7 @@ app = Flask(__name__, template_folder='.')
 
 # Ensure you have GOOGLE_API_KEY in your .env file
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-pro')
 
 # --- PROMPT TEMPLATES ---
 PROMPT_LOW = """
